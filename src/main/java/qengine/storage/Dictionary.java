@@ -5,13 +5,14 @@ import fr.boreal.model.logicalElements.api.Term;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Dictionnary {
+public class Dictionary {
 
     private final Map<Term, Integer> term2id = new HashMap<>();
     private final Map<Integer, Term> id2term = new HashMap<>();
     private int nextId = 1; // on commence à 1 pour éviter 0 comme valeur "spéciale"
 
-    /** Retourne l'ID d'un terme, le crée s'il n'existe pas. */
+    /** renvoie l’ID d’un terme :
+     * s’il n’existe pas, crée un nouvel ID, insère dans les deux maps, et renvoie l’ID. */
     public int encode(Term t) {
         Integer id = term2id.get(t);
         if (id != null) return id;
@@ -21,7 +22,7 @@ public class Dictionnary {
         return nid;
     }
 
-    /** Retourne l'ID si le terme existe déjà, sinon -1. */
+    /** renvoie l’ID seulement si le terme est déjà connu, sinon -1 */
     public int encodeIfExists(Term t) {
         return term2id.getOrDefault(t, -1);
     }
