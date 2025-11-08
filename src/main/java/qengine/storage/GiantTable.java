@@ -6,7 +6,7 @@ import qengine.model.RDFTriple;
 import qengine.model.StarQuery;
 
 import java.util.*;
-
+//a refaire 
 public class GiantTable implements RDFStorage {
 
     private final Set<RDFTriple> triples = new LinkedHashSet<>();
