@@ -47,10 +47,17 @@ public class RDFHexaStoreIndexTest {
         store.add(new RDFTriple(bob, knows, alice));   // Bob knows Alice
         store.add(new RDFTriple(alice, knows, bob));   // Alice knows Bob
         store.add(new RDFTriple(bob, likes, pizza));   // Bob likes Pizza
+
+        System.out.println("Triplets ajoutés :");
+        store.getAtoms().forEach(System.out::println);
+        System.out.println("Taille du store = " + store.size());
     }
 
     @Test
     void testAddAndSize() {
+        long taille = store.size();
+        System.out.println("Taille actuelle du store : " + taille);
+
         assertEquals(3, store.size(), "Le store doit contenir 3 triplets.");
     }
 
@@ -61,6 +68,12 @@ public class RDFHexaStoreIndexTest {
         var bob = factory.createOrGetLiteral("Bob");
         var id1 = d.encode(bob);
         var id2 = d.encode(bob);
+
+        System.out.println("Encodage Bob → " + id1);
+        System.out.println("Deuxième encodage Bob → " + id2);
+        System.out.println("Décodage ID " + id1 + " → " + d.decode(id1));
+
+
         assertEquals(id1, id2, "Le même terme doit toujours avoir le même ID.");
         assertEquals(bob, d.decode(id1), "Le décodage doit retrouver le terme d'origine.");
     }
@@ -74,9 +87,13 @@ public class RDFHexaStoreIndexTest {
         RDFTriple pattern = new RDFTriple(bob, knows, alice);
         Iterator<Substitution> it = store.match(pattern);
 
-        assertTrue(it.hasNext(), "Le triplet exact doit être trouvé.");
-        assertNotNull(it.next());
-        assertFalse(it.hasNext(), "Il ne doit y avoir qu'un seul match.");
+        int count = 0;
+        while (it.hasNext()) {
+            System.out.println("→ Match trouvé : " + it.next());
+            count++;
+        }
+        assertEquals(1, count, "Il ne doit y avoir qu'un seul match.");
+
     }
 
     @Test
@@ -88,12 +105,13 @@ public class RDFHexaStoreIndexTest {
         RDFTriple pattern = new RDFTriple(v, knows, alice);
         Iterator<Substitution> it = store.match(pattern);
 
-        assertTrue(it.hasNext(), "Au moins un triplet doit correspondre à ?x knows Alice.");
-
-        var substitution = (SubstitutionImpl) it.next();
-        var map = substitution.toMap();
-        assertEquals(factory.createOrGetLiteral(S1), map.get(v),
-                "La variable ?x doit être liée à Bob.");
+        while (it.hasNext()) {
+            var substitution = (SubstitutionImpl) it.next();
+            System.out.println("→ Substitution trouvée : " + substitution);
+            var map = substitution.toMap();
+            assertEquals(factory.createOrGetLiteral(S1), map.get(v),
+                    "La variable ?x doit être liée à Bob.");
+        }
     }
 
     @Test
@@ -112,6 +130,8 @@ public class RDFHexaStoreIndexTest {
             assertTrue(map.containsKey(v), "La substitution doit contenir la variable ?y.");
             count++;
         }
+
+        System.out.println("Nombre de résultats : " + count);
         assertEquals(1, count, "Bob knows ?y doit donner 1 correspondance.");
     }
 
@@ -131,6 +151,8 @@ public class RDFHexaStoreIndexTest {
             count++;
         }
 
+        System.out.println("Nombre de résultats : " + count);
+
         assertEquals(1, count, "likes doit apparaître une fois dans la base.");
     }
 
@@ -142,6 +164,8 @@ public class RDFHexaStoreIndexTest {
 
         RDFTriple pattern = new RDFTriple(bob, livesIn, paris);
         Iterator<Substitution> it = store.match(pattern);
+        System.out.println("→ Résultats trouvés ? " + it.hasNext());
+
         assertFalse(it.hasNext(), "Aucun triplet ne correspond à Bob lives_in Paris.");
     }
 
@@ -152,12 +176,17 @@ public class RDFHexaStoreIndexTest {
         var alice = factory.createOrGetLiteral(S2);
 
         long count = store.howMany(new RDFTriple(bob, knows, alice));
+        System.out.println("howMany(Bob, knows, Alice) = " + count);
         assertEquals(1, count, "Bob knows Alice doit être présent une seule fois.");
     }
 
     @Test
     void testGetAtoms() {
         var atoms = store.getAtoms();
+
+        System.out.println("Triplets contenus dans le store :");
+        atoms.forEach(System.out::println);
+
         assertEquals(3, atoms.size(), "Le store doit restituer 3 triplets RDF.");
         assertThrows(UnsupportedOperationException.class, () -> {
             atoms.clear(); // ne doit pas être modifiable

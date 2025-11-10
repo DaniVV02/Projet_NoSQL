@@ -139,13 +139,17 @@ public class RDFHexaStoreIndex implements RDFStorage {
     }
 
 
-
-
-
     @Override
-    public long howMany(RDFTriple triple) {
-        return match(triple).hasNext() ? 1 : 0;
+    public long howMany(RDFTriple pattern) {
+        long count = 0;
+        Iterator<Substitution> it = match(pattern);
+        while (it.hasNext()) {
+            it.next();
+            count++;
+        }
+        return count;
     }
+
 
     @Override
     public long size() {
