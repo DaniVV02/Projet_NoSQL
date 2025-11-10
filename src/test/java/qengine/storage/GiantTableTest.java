@@ -85,17 +85,17 @@ public class GiantTableTest {
         var v = termFactory.createOrGetVariable("?x");
         RDFTriple pattern = new RDFTriple(v, knows, alice);
 
-        Iterator<?> results = table.match(pattern);
+        Iterator<Substitution> results = table.match(pattern);
         assertTrue(results.hasNext(), "Au moins un triplet devrait correspondre à ?x knows Alice.");
 
-        var substitution = (SubstitutionImpl) results.next();
+        Substitution substitution = results.next();
 
-        var map = substitution.toMap();
+        Substitution expected = new SubstitutionImpl();
+        expected.add(v, bob);
 
-        assertTrue(map.containsKey(v), "La substitution doit contenir la variable ?x.");
-        assertEquals(bob, map.get(v), "La variable ?x doit être liée à Bob.");
-
+        assertEquals(expected, substitution, "La variable ?x doit être liée à Bob.");
     }
+
 
 
     @Test
