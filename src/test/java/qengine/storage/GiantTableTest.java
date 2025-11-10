@@ -16,6 +16,15 @@ import java.util.*;
 
 public class GiantTableTest {
 
+    private static final Literal<String> SUBJECT_1   = SameObjectTermFactory.instance().createOrGetLiteral("subject1");
+    private static final Literal<String> PREDICATE_1 = SameObjectTermFactory.instance().createOrGetLiteral("predicate1");
+    private static final Literal<String> OBJECT_1    = SameObjectTermFactory.instance().createOrGetLiteral("object1");
+    private static final Literal<String> SUBJECT_2   = SameObjectTermFactory.instance().createOrGetLiteral("subject2");
+    private static final Literal<String> OBJECT_2    = SameObjectTermFactory.instance().createOrGetLiteral("object2");
+    private static final Literal<String> OBJECT_3    = SameObjectTermFactory.instance().createOrGetLiteral("object3");
+    private static final Variable VAR_X              = SameObjectTermFactory.instance().createOrGetVariable("?x");
+
+
     private GiantTable table;
     private TermFactory termFactory;
 
@@ -46,6 +55,18 @@ public class GiantTableTest {
         boolean added = table.add(new RDFTriple(bob, knows, alice));
         assertFalse(added, "Un doublon ne doit pas être ajouté.");
         assertEquals(3, table.size(), "La taille doit rester à 3 après ajout d'un doublon.");
+    }
+
+    @Test
+    public void testAddDuplicateAtom() {
+
+        RDFTriple t1 = new RDFTriple(SUBJECT_1, PREDICATE_1, OBJECT_1);
+
+        assertTrue(table.add(t1), "Premier ajout doit renvoyer true");
+        assertFalse(table.add(t1), "Deuxième ajout du même triplet doit renvoyer false");
+        assertEquals(4, table.size(), "la taille doit etre 4 car 3 de la table pour l'ajout de t1");
+
+        System.out.println("Taille finale = " + table.size());
     }
 
     @Test
@@ -104,9 +125,20 @@ public class GiantTableTest {
     }
 
     @Test
-    void testHowMany() {
-        long count = table.howMany(new RDFTriple(bob, knows, alice));
-        assertEquals(1, count, "Bob knows Alice doit apparaître une fois.");
+    public void testHowMany() {
+        System.out.println("=== GiantTable testHowMany ===");
+        GiantTable store = new GiantTable();
+
+        store.add(new RDFTriple(SUBJECT_1, PREDICATE_1, OBJECT_1));
+        store.add(new RDFTriple(SUBJECT_2, PREDICATE_1, OBJECT_2));
+        store.add(new RDFTriple(SUBJECT_1, PREDICATE_1, OBJECT_3));
+
+        RDFTriple pattern = new RDFTriple(SUBJECT_1, PREDICATE_1, VAR_X);
+
+        long count = store.howMany(pattern);
+        System.out.println("howMany()= " + count);
+
+        assertEquals(2, count, "On doit avoir 2 résultats");
     }
 
     @Test
