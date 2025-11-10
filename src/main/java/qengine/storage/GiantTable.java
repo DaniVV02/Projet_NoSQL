@@ -7,13 +7,25 @@ import qengine.model.StarQuery;
 
 import java.util.*;
 
+
 public class GiantTable implements RDFStorage {
 
+    private final Dictionary dict = new Dictionary();
     private final Set<RDFTriple> triples = new LinkedHashSet<>();
 
     @Override
     public boolean add(RDFTriple triple) {
-        return triples.add(triple);
+        // ici on encode les 3 termes (même si on ne stocke ici que le RDFTriple, ça remplit le dictionnaire)
+        dict.encode(triple.getTripleSubject());
+        dict.encode(triple.getTriplePredicate());
+        dict.encode(triple.getTripleObject());
+
+        // cette partie c'ets pour eviter les doublons donc si il existe deja on le rajoute pas
+        if (triples.contains(triple)) {
+            return false;
+        }
+        triples.add(triple);
+        return true;
     }
 
     @Override
@@ -22,26 +34,36 @@ public class GiantTable implements RDFStorage {
 
         for (RDFTriple triple : triples) {
             Map<Variable, Term> env = new HashMap<>();
+
             if (unifyTerm(pattern.getTripleSubject(), triple.getTripleSubject(), env)
                     && unifyTerm(pattern.getTriplePredicate(), triple.getTriplePredicate(), env)
                     && unifyTerm(pattern.getTripleObject(), triple.getTripleObject(), env)) {
 
                 SubstitutionImpl substitution = new SubstitutionImpl();
-                env.forEach(substitution::add);
+
+                for (Map.Entry<Variable, Term> e : env.entrySet()) {
+                    substitution.add(e.getKey(), e.getValue());
+                }
                 results.add(substitution);
             }
         }
         return results.iterator();
     }
 
-    private boolean unifyTerm(Term pattern, Term data, Map<Variable, Term> env) {
-        if (pattern instanceof Variable v) {
-            Term bound = env.get(v);
-            if (bound != null) return bound.equals(data);
-            env.put(v, data);
-            return true;
+    private boolean unifyTerm(Term patternTerm, Term dataTerm, Map<Variable, Term> env) {
+
+        if (patternTerm instanceof Variable v) {
+            Term already = env.get(v);
+
+            if (already != null) {
+                return already.equals(dataTerm);
+            } else {
+                env.put(v, dataTerm);
+                return true;
+            }
+
         } else {
-            return pattern.equals(data);
+            return patternTerm.equals(dataTerm);
         }
     }
 
