@@ -22,12 +22,12 @@ public class Dictionary {
         return nid;
     }
 
-    /** renvoie l’ID seulement si le terme est déjà connu, sinon -1 */
+    // renvoie l’ID seulement si le terme est déjà connu, sinon -1
     public int encodeIfExists(Term t) {
         return term2id.getOrDefault(t, -1);
     }
 
-    /** Retourne le Term pour un id, ou null si absent. */
+    // Retourne le Term pour un id, ou null si absent
     public Term decode(int id) {
         return id2term.get(id);
     }
@@ -36,9 +36,9 @@ public class Dictionary {
         return term2id.size();
     }
 
-    /** public boolean contains(Term t) {
+    public boolean contains(Term t) {
         return term2id.containsKey(t);
     }
-    */
+
 
 }

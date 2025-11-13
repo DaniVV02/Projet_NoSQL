@@ -13,7 +13,6 @@ public class DictionaryTest {
     @Test
     void testEncodeAndDecode() {
         Dictionary dict = new Dictionary();
-        System.out.println("-- Test du dictionary --");
         // ici on creer les 3 terme de test ( BOB, Knows , ALICE) de type (s, p,o)
         Term bob = termFactory.createOrGetLiteral("Bob");
         Term knows = termFactory.createOrGetLiteral("knows");
@@ -82,4 +81,44 @@ public class DictionaryTest {
         assertEquals(idBob, idBob2, "encodeIfExists() doit renvoyer le même ID si le terme existe déjà");
 
     }
+
+    // rajouter test pour contain
+
+    @Test
+    void testContains() {
+        Dictionary dict = new Dictionary();
+        var termFactory = SameObjectTermFactory.instance();
+
+        var bob = termFactory.createOrGetLiteral("Bob");
+        var alice = termFactory.createOrGetLiteral("Alice");
+
+        // Avant encodage
+        System.out.println("Avant encodage :");
+        System.out.println("Le dictionnaire contient Bob ? " + dict.contains(bob));
+        System.out.println("Le dictionnaire contient Alice ? " + dict.contains(alice));
+        assertFalse(dict.contains(bob), "Bob ne devrait pas être encore présent.");
+        assertFalse(dict.contains(alice), "Alice ne devrait pas être encore présente.");
+
+        // Encodage de Bob
+        int idBob = dict.encode(bob);
+        System.out.println("\nEncodage de Bob (id = " + idBob + ")");
+
+        // Après encodage de Bob
+        System.out.println("Le dictionnaire contient Bob ? " + dict.contains(bob));
+        System.out.println("Le dictionnaire contient Alice ? " + dict.contains(alice));
+        assertTrue(dict.contains(bob), "Bob doit maintenant être présent.");
+        assertFalse(dict.contains(alice), "Alice ne devrait toujours pas être présente.");
+
+        // Encodage d’Alice
+        int idAlice = dict.encode(alice);
+        System.out.println("\nEncodage d'Alice (id = " + idAlice + ")");
+        System.out.println("Le dictionnaire contient Bob ? " + dict.contains(bob));
+        System.out.println("Le dictionnaire contient Alice ? " + dict.contains(alice));
+        assertTrue(dict.contains(bob), "Bob doit toujours être présent.");
+        assertTrue(dict.contains(alice), "Alice doit maintenant être présente.");
+
+        System.out.println("Taille du dictionnaire = " + dict.size());
+        assertEquals(2, dict.size(), "Il doit y avoir 2 termes dans le dictionnaire.");
+    }
+
 }

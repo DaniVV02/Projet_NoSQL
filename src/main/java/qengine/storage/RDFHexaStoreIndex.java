@@ -93,7 +93,7 @@ public class RDFHexaStoreIndex implements RDFStorage {
         } else if (s != null && o != null) {
             matchFromIndex(sop.getOrDefault(s, Map.of()), o, pTerm, results, sTerm, oTerm);
         } else {
-            // sinon → fallback : scan complet
+            // sinon -> fallback : scan complet
             results.addAll(fullScan(pattern));
         }
 
