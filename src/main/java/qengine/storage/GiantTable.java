@@ -56,13 +56,16 @@ public class GiantTable implements RDFStorage {
             Term already = env.get(v);
 
             if (already != null) {
+                // si la variable est déjà liée, on vérifie la cohérence
                 return already.equals(dataTerm);
             } else {
+                // sinon, on lie la variable à la nouvelle valeur
                 env.put(v, dataTerm);
                 return true;
             }
 
         } else {
+            // si c’est une constante, il faut que les deux soient égales
             return patternTerm.equals(dataTerm);
         }
     }
