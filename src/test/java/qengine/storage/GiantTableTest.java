@@ -50,11 +50,15 @@ public class GiantTableTest {
 
     @Test
     void testAddAndSize() {
+        System.out.println("testAddAndSize");
         assertEquals(3, table.size(), "Il devrait y avoir 3 triplets dans la table.");
         // ajout d'un doublon -> ne change pas la taille
         boolean added = table.add(new RDFTriple(bob, knows, alice));
         assertFalse(added, "Un doublon ne doit pas être ajouté.");
         assertEquals(3, table.size(), "La taille doit rester à 3 après ajout d'un doublon.");
+
+        System.out.println("decode"+ table.getAtoms());
+
     }
 
     @Test

@@ -1,6 +1,7 @@
 package qengine.storage;
 
 import fr.boreal.model.logicalElements.api.*;
+import fr.boreal.model.logicalElements.impl.ConstantImpl;
 import fr.boreal.model.logicalElements.impl.SubstitutionImpl;
 import qengine.model.RDFTriple;
 import qengine.model.StarQuery;
@@ -11,20 +12,22 @@ import java.util.*;
 public class GiantTable implements RDFStorage {
 
     private final Dictionary dict = new Dictionary();
-    private final Set<RDFTriple> triples = new LinkedHashSet<>();
+    private final Set<List<Integer>> triples = new LinkedHashSet<>();
 
     @Override
     public boolean add(RDFTriple triple) {
-        // ici on encode les 3 termes (même si on ne stocke ici que le RDFTriple, ça remplit le dictionnaire)
-        dict.encode(triple.getTripleSubject());
-        dict.encode(triple.getTriplePredicate());
-        dict.encode(triple.getTripleObject());
+        int s = dict.encode(triple.getTripleSubject());
+        int p = dict.encode(triple.getTriplePredicate());
+        int o = dict.encode(triple.getTripleObject());
 
-        // cette partie c'ets pour eviter les doublons donc si il existe deja on le rajoute pas
-        if (triples.contains(triple)) {
+        List<Integer> encoded = Arrays.asList(s, p, o);
+        System.out .println(encoded);
+        if (triples.contains(encoded)) {
             return false;
         }
-        triples.add(triple);
+
+        triples.add(encoded);
+        System.out .println(triples);
         return true;
     }
 
@@ -32,42 +35,54 @@ public class GiantTable implements RDFStorage {
     public Iterator<Substitution> match(RDFTriple pattern) {
         List<Substitution> results = new ArrayList<>();
 
-        for (RDFTriple triple : triples) {
+        // On décode le pattern si besoin
+        int sPatternId = dict.encodeIfExists(pattern.getTripleSubject());
+        int pPatternId = dict.encodeIfExists(pattern.getTriplePredicate());
+        int oPatternId = dict.encodeIfExists(pattern.getTripleObject());
+
+        boolean sIsVar = pattern.getTripleSubject() instanceof Variable;
+        boolean pIsVar = pattern.getTriplePredicate() instanceof Variable;
+        boolean oIsVar = pattern.getTripleObject() instanceof Variable;
+
+        for (List<Integer> encodedTriple : triples) {
+            int s = encodedTriple.get(0);
+            int p = encodedTriple.get(1);
+            int o = encodedTriple.get(2);
+
             Map<Variable, Term> env = new HashMap<>();
+            boolean match = true;
 
-            if (unifyTerm(pattern.getTripleSubject(), triple.getTripleSubject(), env)
-                    && unifyTerm(pattern.getTriplePredicate(), triple.getTriplePredicate(), env)
-                    && unifyTerm(pattern.getTripleObject(), triple.getTripleObject(), env)) {
+            // Sujet
+            if (sIsVar) {
+                env.put((Variable) pattern.getTripleSubject(), dict.decode(s));
+            } else if (sPatternId != -1 && sPatternId != s) {
+                match = false;
+            }
 
+            // Prédicat
+            if (pIsVar) {
+                env.put((Variable) pattern.getTriplePredicate(), dict.decode(p));
+            } else if (pPatternId != -1 && pPatternId != p) {
+                match = false;
+            }
+
+            // Objet
+            if (oIsVar) {
+                env.put((Variable) pattern.getTripleObject(), dict.decode(o));
+            } else if (oPatternId != -1 && oPatternId != o) {
+                match = false;
+            }
+
+            if (match) {
                 SubstitutionImpl substitution = new SubstitutionImpl();
-
                 for (Map.Entry<Variable, Term> e : env.entrySet()) {
                     substitution.add(e.getKey(), e.getValue());
                 }
                 results.add(substitution);
             }
         }
+
         return results.iterator();
-    }
-
-    private boolean unifyTerm(Term patternTerm, Term dataTerm, Map<Variable, Term> env) {
-
-        if (patternTerm instanceof Variable v) {
-            Term already = env.get(v);
-
-            if (already != null) {
-                // si la variable est déjà liée, on vérifie la cohérence
-                return already.equals(dataTerm);
-            } else {
-                // sinon, on lie la variable à la nouvelle valeur
-                env.put(v, dataTerm);
-                return true;
-            }
-
-        } else {
-            // si c’est une constante, il faut que les deux soient égales
-            return patternTerm.equals(dataTerm);
-        }
     }
 
 
@@ -91,6 +106,15 @@ public class GiantTable implements RDFStorage {
 
     @Override
     public Collection<RDFTriple> getAtoms() {
-        return Collections.unmodifiableSet(triples);
+        List<RDFTriple> decodedTriples = new ArrayList<>();
+
+        for (List<Integer> ids : triples) {
+            Term s = dict.decode(ids.get(0));
+            Term p = dict.decode(ids.get(1));
+            Term o = dict.decode(ids.get(2));
+            decodedTriples.add(new RDFTriple(s, p, o));
+        }
+
+        return Collections.unmodifiableList(decodedTriples);
     }
 }
