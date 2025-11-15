@@ -35,10 +35,10 @@ public class Dictionary {
     public int size() {
         return term2id.size();
     }
-
+/**
     public boolean contains(Term t) {
         return term2id.containsKey(t);
     }
-
+**/
 
 }

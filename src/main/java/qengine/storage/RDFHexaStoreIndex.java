@@ -16,6 +16,9 @@ import java.util.*;
 public class RDFHexaStoreIndex implements RDFStorage {
 
     private final Dictionary dict = new Dictionary();
+
+    private final Set<List<Integer>> encodedTriples = new LinkedHashSet<>();
+
     // === Six index ===
     private final Map<Integer, Map<Integer, Set<Integer>>> spo = new HashMap<>();
     private final Map<Integer, Map<Integer, Set<Integer>>> sop = new HashMap<>();
@@ -32,35 +35,37 @@ public class RDFHexaStoreIndex implements RDFStorage {
         int p = dict.encode(triple.getTriplePredicate());
         int o = dict.encode(triple.getTripleObject());
 
-        boolean added = insert(spo, s, p, o)
-                | insert(sop, s, o, p)
-                | insert(pso, p, s, o)
-                | insert(pos, p, o, s)
-                | insert(osp, o, s, p)
-                | insert(ops, o, p, s);
+        // Triplet encodé [s, p, o] comme dans GiantTable
+        List<Integer> encoded = Arrays.asList(s, p, o);
 
-        if (added) tripleCount++;
-        return added;
+        // Si déjà présent → on ne touche pas aux index, on ne compte pas
+        if (encodedTriples.contains(encoded)) {
+            return false;
+        }
+
+        // Nouveau triplet → on l’ajoute dans le set encodé
+        encodedTriples.add(encoded);
+
+        // Puis on met à jour les 6 index (on sait que c'est un nouveau (s,p,o))
+        insert(spo, s, p, o);  // SPO
+        insert(sop, s, o, p);  // SOP
+        insert(pso, p, s, o);  // PSO
+        insert(pos, p, o, s);  // POS
+        insert(osp, o, s, p);  // OSP
+        insert(ops, o, p, s);  // OPS
+
+        // On incrémente le compteur logique de triplets
+        tripleCount++;
+
+        return true;
     }
+
 
     private boolean insert(Map<Integer, Map<Integer, Set<Integer>>> index, int a, int b, int c) {
         return index
                 .computeIfAbsent(a, k -> new HashMap<>())
                 .computeIfAbsent(b, k -> new HashSet<>())
                 .add(c);
-    }
-
-
-    private Term subjectOf(RDFTriple t) {
-        return t.getTripleSubject();
-    }
-
-    private Term predicateOf(RDFTriple t) {
-        return t.getTriplePredicate();
-    }
-
-    private Term objectOf(RDFTriple t) {
-        return t.getTripleObject();
     }
 
 
@@ -87,11 +92,11 @@ public class RDFHexaStoreIndex implements RDFStorage {
 
         // on choisit l’index optimal
         if (s != null && p != null) {
-            matchFromIndex(spo.getOrDefault(s, Map.of()), p, oTerm, results, sTerm, pTerm);
+            matchFromIndex(spo.getOrDefault(s, Map.of()), p, oTerm, results);
         } else if (p != null && o != null) {
-            matchFromIndex(pos.getOrDefault(p, Map.of()), o, sTerm, results, pTerm, oTerm);
+            matchFromIndex(pos.getOrDefault(p, Map.of()), o, sTerm, results);
         } else if (s != null && o != null) {
-            matchFromIndex(sop.getOrDefault(s, Map.of()), o, pTerm, results, sTerm, oTerm);
+            matchFromIndex(sop.getOrDefault(s, Map.of()), o, pTerm, results);
         } else {
             // sinon -> fallback : scan complet
             results.addAll(fullScan(pattern));
@@ -107,8 +112,7 @@ public class RDFHexaStoreIndex implements RDFStorage {
     }
 
     private void matchFromIndex(Map<Integer, Set<Integer>> level2, Integer key,
-                                Term unknownTerm, List<Substitution> results,
-                                Term known1, Term known2) {
+                                Term unknownTerm, List<Substitution> results) {
 
         if (!level2.containsKey(key)) return;
 
@@ -158,25 +162,27 @@ public class RDFHexaStoreIndex implements RDFStorage {
 
     @Override
     public Collection<RDFTriple> getAtoms() {
-        // On reconstruit les triplets à partir du dictionnaire
-        List<RDFTriple> triples = new ArrayList<>();
-        for (var sEntry : spo.entrySet()) {
-            for (var pEntry : sEntry.getValue().entrySet()) {
-                for (int o : pEntry.getValue()) {
-                    triples.add(new RDFTriple(
-                            dict.decode(sEntry.getKey()),
-                            dict.decode(pEntry.getKey()),
-                            dict.decode(o)
-                    ));
-                }
-            }
+        // On reconstruit les RDFTriple à partir des IDs encodés
+        List<RDFTriple> decoded = new ArrayList<>();
+        for (List<Integer> ids : encodedTriples) {
+            Term s = dict.decode(ids.get(0));
+            Term p = dict.decode(ids.get(1));
+            Term o = dict.decode(ids.get(2));
+            decoded.add(new RDFTriple(s, p, o));
         }
-        return triples;
+        return Collections.unmodifiableList(decoded);
     }
 
     @Override
     public Iterator<Substitution> match(StarQuery q) {
         throw new UnsupportedOperationException("Non demandé pour le rendu du 15 novembre.");
+    }
+
+    public void printEncodedTriples() {
+        System.out.println("=== Encoded Triples (s, p, o) ===");
+        for (List<Integer> triple : encodedTriples) {
+            System.out.println("(" + triple.get(0) + ", " + triple.get(1) + ", " + triple.get(2) + ")");
+        }
     }
 
 }

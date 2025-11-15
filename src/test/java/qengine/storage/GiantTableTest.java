@@ -63,6 +63,7 @@ public class GiantTableTest {
 
     @Test
     public void testAddDuplicateAtom() {
+        System.out.println("testAddDuplicateAtom");
 
         RDFTriple t1 = new RDFTriple(SUBJECT_1, PREDICATE_1, OBJECT_1);
 
@@ -75,6 +76,7 @@ public class GiantTableTest {
 
     @Test
     void testMatchExact() {
+        System.out.println("testMatchExact");
         // pattern exactement identique à un triplet
         RDFTriple pattern = new RDFTriple(bob, knows, alice);
         Iterator<?> results = table.match(pattern);
@@ -85,6 +87,8 @@ public class GiantTableTest {
 
     @Test
     void testMatchWithVariables() {
+        System.out.println("testMatchWithVariables");
+
         // pattern avec une variable ?x
         var v = termFactory.createOrGetVariable("?x");
         RDFTriple pattern = new RDFTriple(v, knows, alice);
@@ -104,6 +108,8 @@ public class GiantTableTest {
 
     @Test
     void testMatchMultipleResults() {
+        System.out.println("testMatchMultipleResults");
+
         // pattern avec 2 variables : ?x knows ?y
         var x = termFactory.createOrGetVariable("?x");
         var y = termFactory.createOrGetVariable("?y");
@@ -122,6 +128,8 @@ public class GiantTableTest {
 
     @Test
     void testMatchNoResult() {
+        System.out.println("testMatchNoResult");
+
         // pattern sans correspondance
         RDFTriple pattern = new RDFTriple(alice, likes, pizza);
         Iterator<?> results = table.match(pattern);
@@ -130,6 +138,8 @@ public class GiantTableTest {
 
     @Test
     public void testHowMany() {
+        System.out.println("testHowMany");
+
         GiantTable store = new GiantTable();
 
         store.add(new RDFTriple(SUBJECT_1, PREDICATE_1, OBJECT_1));
@@ -146,6 +156,8 @@ public class GiantTableTest {
 
     @Test
     void testGetAtoms() {
+        System.out.println("testGetAtoms");
+
         var atoms = table.getAtoms();
         assertEquals(3, atoms.size(), "La collection retournée doit contenir 3 triplets.");
         assertThrows(UnsupportedOperationException.class, () -> {

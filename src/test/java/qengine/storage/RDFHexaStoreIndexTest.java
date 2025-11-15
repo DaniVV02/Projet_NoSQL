@@ -21,7 +21,7 @@ import java.util.Iterator;
  */
 public class RDFHexaStoreIndexTest {
 
-    private RDFHexaStore store;
+    private RDFHexaStoreIndex store;
     private TermFactory factory;
 
     // quelques termes RDF pour les tests
@@ -35,7 +35,7 @@ public class RDFHexaStoreIndexTest {
     @BeforeEach
     void setUp() {
         factory = SameObjectTermFactory.instance();
-        store = new RDFHexaStore();
+        store = new RDFHexaStoreIndex();
 
         var bob = factory.createOrGetLiteral(S1);
         var alice = factory.createOrGetLiteral(S2);
@@ -47,6 +47,8 @@ public class RDFHexaStoreIndexTest {
         store.add(new RDFTriple(bob, knows, alice));   // Bob knows Alice
         store.add(new RDFTriple(alice, knows, bob));   // Alice knows Bob
         store.add(new RDFTriple(bob, likes, pizza));   // Bob likes Pizza
+
+        store.printEncodedTriples();
 
         System.out.println("Triplets ajoutés :");
         store.getAtoms().forEach(System.out::println);
@@ -182,14 +184,25 @@ public class RDFHexaStoreIndexTest {
 
     @Test
     void testGetAtoms() {
+        System.out.println("=== testGetAtoms ===");
+
         var atoms = store.getAtoms();
 
         System.out.println("Triplets contenus dans le store :");
         atoms.forEach(System.out::println);
 
-        assertEquals(3, atoms.size(), "Le store doit restituer 3 triplets RDF.");
+        atoms.forEach(t -> System.out.println("  " + t));
+
+        // D'après le setUp : 3 triplets insérés
+        int taille = atoms.size();
+        System.out.println("Taille de la collection retournée par getAtoms() : " + taille);
+        assertEquals(3, taille, "Le store doit restituer 3 triplets RDF.");
+
+        // Vérifie que la collection est vraiment non modifiable
         assertThrows(UnsupportedOperationException.class, () -> {
-            atoms.clear(); // ne doit pas être modifiable
+            System.out.println("Tentative de clear() sur la collection retournée...");
+            atoms.clear(); // doit lever une exception
         });
     }
+
 }
