@@ -86,10 +86,10 @@ public class GiantTable implements RDFStorage {
     }
 
 
-    @Override
-    public Iterator<Substitution> match(StarQuery q) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+    //@Override
+    //public Iterator<Substitution> match(StarQuery q) {
+        //throw new UnsupportedOperationException("Not implemented yet");
+    //}
 
     @Override
     public long howMany(RDFTriple triple) {

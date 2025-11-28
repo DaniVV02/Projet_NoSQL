@@ -1,5 +1,7 @@
 package qengine.storage;
 
+import fr.boreal.model.logicalElements.api.Term;
+import fr.boreal.model.logicalElements.api.Variable;
 import fr.boreal.model.logicalElements.factory.api.TermFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,8 +12,11 @@ import fr.boreal.model.logicalElements.impl.SubstitutionImpl;
 import fr.boreal.model.logicalElements.api.Substitution;
 import fr.boreal.model.logicalElements.factory.impl.SameObjectTermFactory;
 import qengine.model.RDFTriple;
+import qengine.model.StarQuery;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Tests unitaires pour la classe RDFHexaStore.
@@ -203,5 +208,30 @@ public class RDFHexaStoreTest {
             atoms.clear(); // doit lever une exception
         });
     }
+
+    @Test
+    void testMatchStarQuery() {
+        System.out.println("=== testMatchStarQuery ===");
+
+        Variable x = factory.createOrGetVariable("?x");
+
+        RDFTriple t1 = new RDFTriple(x, factory.createOrGetLiteral(P1), factory.createOrGetLiteral(S2));
+        RDFTriple t2 = new RDFTriple(x, factory.createOrGetLiteral(P2), factory.createOrGetLiteral(O2));
+
+        StarQuery q = new StarQuery("QStar", List.of(t1, t2), Set.of(x));
+        Iterator<Substitution> results = store.match(q);
+
+        assertTrue(results.hasNext(), "La star query doit renvoyer au moins un résultat.");
+
+        Substitution sol = results.next();
+        System.out.println("→ Solution trouvée : " + sol);
+
+        Term expected = factory.createOrGetLiteral(S1);
+        Term actual = sol.toMap().get(x);
+
+        assertEquals(expected, actual, "La variable ?x doit être liée à Bob.");
+        assertFalse(results.hasNext(), "Il ne doit y avoir qu'une seule solution.");
+    }
+
 
 }

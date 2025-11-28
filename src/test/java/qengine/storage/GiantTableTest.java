@@ -9,6 +9,7 @@ import fr.boreal.model.logicalElements.api.*;
 
 import fr.boreal.model.logicalElements.impl.SubstitutionImpl;
 import qengine.model.RDFTriple;
+import qengine.model.StarQuery;
 
 import java.util.Iterator;
 import java.util.*;
@@ -164,4 +165,26 @@ public class GiantTableTest {
             atoms.clear(); // ne doit pas être modifiable
         });
     }
+
+    @Test
+    void testMatchStarQuery() {
+
+        System.out.println("=== testMatchStarQuery ===");
+
+        Variable x = termFactory.createOrGetVariable("?x");
+
+        RDFTriple t1 = new RDFTriple(x, knows, alice);
+        RDFTriple t2 = new RDFTriple(x, likes, pizza);
+        StarQuery q = new StarQuery("Q1", List.of(t1, t2), Set.of(x));
+
+        Iterator<Substitution> results = table.match(q);
+
+        assertTrue(results.hasNext(), "Il devrait y avoir un résultat pour cette StarQuery.");
+        Substitution sub = results.next();
+        System.out.println("Résultat trouvé : " + sub);
+        Term value = sub.toMap().get(x);
+        assertEquals(bob, value, "La variable centrale ?x doit être liée à Bob.");
+        assertFalse(results.hasNext(), "Il ne doit y avoir qu’un seul résultat.");
+    }
+
 }

@@ -173,11 +173,11 @@ public class RDFHexaStore implements RDFStorage {
         return Collections.unmodifiableList(decoded);
     }
 
-    @Override
+    /*@Override
     public Iterator<Substitution> match(StarQuery q) {
         throw new UnsupportedOperationException("Non demandé pour le rendu du 15 novembre.");
     }
-
+*/
     public void printEncodedTriples() {
         System.out.println("=== Encoded Triples (s, p, o) ===");
         for (List<Integer> triple : encodedTriples) {
