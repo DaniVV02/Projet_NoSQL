@@ -49,7 +49,7 @@ public interface RDFStorage {
         // 1) Solutions du premier patron
         Set<Term> candidats = new HashSet<>();
 
-        Iterator<Substitution> it = match(patterns.get(0));
+        Iterator<Substitution> it = match(patterns.getFirst());
         while (it.hasNext()) {
             Substitution sub = it.next();
             Term value = sub.toMap().get(center);
